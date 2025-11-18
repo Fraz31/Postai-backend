@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: postai-backend
+    env: node
+    buildCommand: ""
+    startCommand: npm start
+    envVars:
+      - key: API_KEY
+        sync: false
+      - key: PORT
+        value: 5000
+
