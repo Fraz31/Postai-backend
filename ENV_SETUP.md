@@ -44,4 +44,20 @@ Set environment variables in the Render dashboard:
 - **SendGrid**: Dashboard → Settings → API Keys
 - **Mailgun**: Dashboard → Settings → API Keys
 - **Resend**: Dashboard → API Keys
+ 
+## Additional Environment Variables for Subscriptions & Auth
+
+Add these keys (both locally in `.env` and in Render):
+
+```
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+FRONTEND_URL=https://postai-frontend.onrender.com
+
+LEMONSQUEEZY_API_KEY=your_api_key
+LEMONSQUEEZY_STORE_ID=your_store_id
+LEMONSQUEEZY_PRO_VARIANT_ID=pro_variant_id
+LEMONSQUEEZY_PREMIUM_VARIANT_ID=premium_variant_id
+WEBHOOK_SECRET=your_webhook_secret
+```
 

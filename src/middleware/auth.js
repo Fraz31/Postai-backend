@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { supabase } from '../lib/supabase.js';
 import { logger } from '../lib/logger.js';
 
@@ -54,3 +55,31 @@ export function errorHandler(err, req, res, next) {
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 }
+=======
+import User from '../models/User.js';
+import { verifyAccessToken } from '../utils/jwt.js';
+
+export async function requireAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    const payload = verifyAccessToken(token);
+    const userId = payload.sub;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    req.user = user;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+  }
+}
+>>>>>>> bc8cd09 (Auto-fix backend + update API + CORS + Git config)
