@@ -19,3 +19,6 @@ export function auth(req, res, next) {
     return res.status(401).json({ success: false, message: "Invalid token" });
   }
 }
+
+// Export as both 'auth' and 'requireAuth' for compatibility
+export const requireAuth = auth;
