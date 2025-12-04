@@ -6,6 +6,8 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 import authRoutes from './routes/authRoutes.js';
 import generateRoutes from './routes/generateRoutes.js';
+import postsRoutes from './routes/posts.js';
+import schedulesRoutes from './routes/schedules.js';
 import { subscriptionRouter, webhookRouter } from './routes/subscriptionRoutes.js';
 
 export function createApp() {
@@ -17,7 +19,7 @@ export function createApp() {
       origin: (origin, callback) => {
         callback(null, true);
       },
-      methods: ['GET', 'POST', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true
     })
   );
@@ -34,6 +36,8 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/subscription', subscriptionRouter);
   app.use('/api', generateRoutes);
+  app.use('/api/posts', postsRoutes);
+  app.use('/api/schedules', schedulesRoutes);
   app.use('/webhook', webhookRouter);
 
   // Root endpoint

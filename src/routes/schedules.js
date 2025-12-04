@@ -1,14 +1,13 @@
 import express from 'express';
-import { createScheduleSchema, updateScheduleSchema } from '../schemas/schedule.js';
 import { createSchedule, getUserSchedules, getSchedule, updateSchedule, deleteSchedule } from '../services/schedules.js';
-import { validateSchema, authMiddleware } from '../middleware/auth.js';
+import { requireAuth } from '../middleware/auth.js';
 import { logger } from '../lib/logger.js';
 
 const router = express.Router();
 
-router.post('/', authMiddleware, validateSchema(createScheduleSchema), async (req, res, next) => {
+router.post('/', requireAuth, async (req, res, next) => {
   try {
-    const schedule = await createSchedule(req.user.id, req.validatedData);
+    const schedule = await createSchedule(req.user.id, req.body);
     res.status(201).json(schedule);
   } catch (error) {
     logger.error('Create schedule error', error);
@@ -16,7 +15,7 @@ router.post('/', authMiddleware, validateSchema(createScheduleSchema), async (re
   }
 });
 
-router.get('/', authMiddleware, async (req, res, next) => {
+router.get('/', requireAuth, async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 100);
     const offset = parseInt(req.query.offset) || 0;
@@ -28,7 +27,7 @@ router.get('/', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.get('/:id', authMiddleware, async (req, res, next) => {
+router.get('/:id', requireAuth, async (req, res, next) => {
   try {
     const schedule = await getSchedule(req.user.id, req.params.id);
     res.json(schedule);
@@ -38,9 +37,9 @@ router.get('/:id', authMiddleware, async (req, res, next) => {
   }
 });
 
-router.patch('/:id', authMiddleware, validateSchema(updateScheduleSchema), async (req, res, next) => {
+router.patch('/:id', requireAuth, async (req, res, next) => {
   try {
-    const schedule = await updateSchedule(req.user.id, req.params.id, req.validatedData);
+    const schedule = await updateSchedule(req.user.id, req.params.id, req.body);
     res.json(schedule);
   } catch (error) {
     logger.error('Update schedule error', error);
@@ -48,7 +47,7 @@ router.patch('/:id', authMiddleware, validateSchema(updateScheduleSchema), async
   }
 });
 
-router.delete('/:id', authMiddleware, async (req, res, next) => {
+router.delete('/:id', requireAuth, async (req, res, next) => {
   try {
     await deleteSchedule(req.user.id, req.params.id);
     res.json({ success: true });
