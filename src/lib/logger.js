@@ -1,4 +1,4 @@
-import { config } from '../config/env.js';
+import { env } from '../config/env.js';
 
 const LOG_LEVELS = {
   ERROR: 'ERROR',
@@ -32,12 +32,12 @@ export const logger = {
     console.warn(formatLog(LOG_LEVELS.WARN, message, data));
   },
   info: (message, data) => {
-    if (config.nodeEnv !== 'test') {
+    if (env.NODE_ENV !== 'test') {
       console.log(formatLog(LOG_LEVELS.INFO, message, data));
     }
   },
   debug: (message, data) => {
-    if (config.nodeEnv === 'development') {
+    if (env.NODE_ENV === 'development') {
       console.log(formatLog(LOG_LEVELS.DEBUG, message, data));
     }
   }

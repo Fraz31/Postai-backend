@@ -1,8 +1,8 @@
-import { OpenAI } from 'openai';
-import { config } from '../config/env.js';
+import OpenAI from 'openai';
+import { env } from '../config/env.js';
 
-export const openai = config.openai.apiKey
-  ? new OpenAI({ apiKey: config.openai.apiKey })
+export const openai = env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: env.OPENAI_API_KEY })
   : null;
 
 export async function generateContent(prompt, contentType = 'post') {
