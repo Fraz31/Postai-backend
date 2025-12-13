@@ -9,9 +9,13 @@ import generateRoutes from './routes/generateRoutes.js';
 import postsRoutes from './routes/posts.js';
 import schedulesRoutes from './routes/schedules.js';
 import { subscriptionRouter, webhookRouter } from './routes/subscriptionRoutes.js';
+import { initScheduler } from './services/scheduler.js';
 
 export function createApp() {
   const app = express();
+
+  // Start Scheduler
+  initScheduler();
 
   // CORS configuration for deployment
   app.use(
