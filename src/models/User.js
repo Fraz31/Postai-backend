@@ -32,6 +32,16 @@ const userSchema = new mongoose.Schema(
         connected: { type: Boolean, default: false },
         accessToken: String,
         username: String
+      },
+      facebook: {
+        connected: { type: Boolean, default: false },
+        accessToken: String,
+        username: String
+      },
+      tiktok: {
+        connected: { type: Boolean, default: false },
+        accessToken: String,
+        username: String
       }
     }
   },
