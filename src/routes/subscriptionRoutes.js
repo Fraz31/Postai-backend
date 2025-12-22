@@ -1,15 +1,15 @@
 import express from 'express';
-import { createCheckout, getSubscription, handleWebhook } from '../controllers/subscriptionController.js';
+import { paddleWebhook, getSubscription } from '../controllers/subscriptionController.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const subscriptionRouter = express.Router();
 const webhookRouter = express.Router();
 
 // Authenticated subscription routes
-subscriptionRouter.post('/create-checkout', requireAuth, createCheckout);
 subscriptionRouter.get('/me', requireAuth, getSubscription);
 
-// Webhook route (no auth, raw body for signature validation)
-webhookRouter.post('/', express.raw({ type: 'application/json' }), handleWebhook);
+// Paddle webhook route (no auth, raw body for signature validation)
+// Note: Raw body parsing is handled in app.js for /api/webhooks path
+webhookRouter.post('/paddle', paddleWebhook);
 
 export { subscriptionRouter, webhookRouter };

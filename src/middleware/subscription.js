@@ -4,6 +4,13 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// Plan limits: Starter = 50, Pro = 300, Business = unlimited
+const PLAN_LIMITS = {
+  starter: 50,
+  pro: 300,
+  business: Infinity
+};
+
 export function requireActiveSubscription(req, res, next) {
   const user = req.user;
 
@@ -11,13 +18,13 @@ export function requireActiveSubscription(req, res, next) {
     return res.status(401).json({ success: false, message: 'Invalid or expired token' });
   }
 
-  if (user.subscriptionPlan === 'free') {
-    // Free plan is allowed but rate-limited; handled in rate limiter
-    return next();
-  }
-
-  if (user.subscriptionStatus !== 'active') {
-    return res.status(403).json({ success: false, message: 'Subscription inactive or expired' });
+  // All plans are allowed (starter is the default plan)
+  // Check if subscription is cancelled
+  if (user.subscriptionStatus === 'cancelled') {
+    return res.status(403).json({
+      success: false,
+      message: 'Your subscription has been cancelled. Please resubscribe to continue.'
+    });
   }
 
   return next();
@@ -31,32 +38,33 @@ export async function checkSubscriptionRateLimit(req, res, next) {
       return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 
-    const plan = user.subscriptionPlan || 'free';
-    const limits = {
-      free: 5,
-      pro: 50,
-      premium: Infinity
-    };
-
-    const limit = limits[plan] ?? 5;
+    const plan = user.subscriptionPlan || 'starter';
+    const limit = PLAN_LIMITS[plan] ?? PLAN_LIMITS.starter;
     const todayStr = today();
 
-    let daily = user.dailyCredits || { date: todayStr, used: 0 };
+    // Get current month usage instead of daily for monthly limits
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
 
-    if (daily.date !== todayStr) {
-      daily = { date: todayStr, used: 0 };
+    let monthlyUsage = user.dailyCredits || { date: currentMonth, used: 0 };
+
+    // Reset if it's a new month
+    if (!monthlyUsage.date || monthlyUsage.date.slice(0, 7) !== currentMonth) {
+      monthlyUsage = { date: currentMonth, used: 0 };
     }
 
-    if (Number.isFinite(limit) && daily.used >= limit) {
+    if (Number.isFinite(limit) && monthlyUsage.used >= limit) {
       return res.status(429).json({
         success: false,
-        message: 'Daily generation limit reached for your plan'
+        message: `Monthly generation limit (${limit} posts) reached for your ${plan} plan. Upgrade to get more!`,
+        limit,
+        used: monthlyUsage.used,
+        plan
       });
     }
 
     // Increment and persist
-    daily.used += 1;
-    user.dailyCredits = daily;
+    monthlyUsage.used += 1;
+    user.dailyCredits = monthlyUsage;
     await user.save();
 
     return next();

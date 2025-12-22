@@ -28,13 +28,22 @@ export function createApp() {
     })
   );
 
-  // Use JSON body parser for all routes except webhook (which needs raw body for signature verification)
-  app.use((req, res, next) => {
-    if (req.originalUrl.startsWith('/webhook')) {
-      return next();
+  // Paddle webhook needs raw body for signature validation
+  // MUST be before express.json() middleware
+  app.use('/api/webhooks', express.raw({ type: 'application/json' }), (req, res, next) => {
+    // Store raw body for signature validation
+    req.rawBody = req.body.toString();
+    // Parse JSON for handler
+    try {
+      req.body = JSON.parse(req.rawBody);
+    } catch (e) {
+      // Keep as-is if not valid JSON
     }
-    return express.json()(req, res, next);
+    next();
   });
+
+  // Use JSON body parser for all other routes
+  app.use(express.json());
 
   // Auth, subscription and generation routes
   app.use('/api/auth', authRoutes);
@@ -42,16 +51,17 @@ export function createApp() {
   app.use('/api', generateRoutes);
   app.use('/api/posts', postsRoutes);
   app.use('/api/schedules', schedulesRoutes);
-  app.use('/webhook', webhookRouter);
+  app.use('/api/webhooks', webhookRouter);
 
   // Root endpoint
   app.get('/', (req, res) => {
     res.json({
-      message: 'PostAI Backend API',
+      message: 'SocialMonkey Backend API',
       status: 'running',
       endpoints: {
         health: '/health',
-        api: '/api'
+        api: '/api',
+        webhooks: '/api/webhooks/paddle'
       },
       timestamp: new Date().toISOString()
     });

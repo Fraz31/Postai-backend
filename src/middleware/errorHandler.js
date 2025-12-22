@@ -21,10 +21,10 @@ export function errorHandler(err, req, res, next) {
     status = 400;
   }
 
-  // Axios / LemonSqueezy errors
+  // Axios / External API errors (Paddle, etc.)
   if (err.isAxiosError) {
     status = err.response?.status || 500;
-    message = err.response?.data || err.message || 'LemonSqueezy request failed';
+    message = err.response?.data || err.message || 'External API request failed';
   }
 
   return res.status(status).json({

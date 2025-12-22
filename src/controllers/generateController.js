@@ -1,9 +1,11 @@
 import { openai, generateContent as libGenerate, enrichContent as libEnrich } from '../lib/openai.js';
 import { generateImage } from '../lib/imageGen.js';
+import User from '../models/User.js';
 
 export async function generateContent(req, res, next) {
   try {
     const { contentType, prompt, platforms, schedule, scheduledTime, generateImage: shouldGenerateImage } = req.body || {};
+    const userId = req.user ? req.user.id : null;
 
     const trimmedPrompt = (prompt || '').trim();
 
@@ -15,13 +17,22 @@ export async function generateContent(req, res, next) {
       return res.status(400).json({ success: false, message: 'Prompt is too long' });
     }
 
-    // Call OpenAI Library
-    const generated = await libGenerate(trimmedPrompt, contentType);
+    // Fetch user to get API key
+    let userApiKey = null;
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user && user.apiKeys && user.apiKeys.openai) {
+        userApiKey = user.apiKeys.openai;
+      }
+    }
+
+    // Call OpenAI Library with user key
+    const generated = await libGenerate(trimmedPrompt, contentType, userApiKey);
 
     let imageUrl = null;
     if (shouldGenerateImage) {
       try {
-        imageUrl = await generateImage(trimmedPrompt);
+        imageUrl = await generateImage(trimmedPrompt, userApiKey);
       } catch (err) {
         console.error('Image generation failed:', err);
         // Don't fail the whole request if image fails
@@ -37,7 +48,8 @@ export async function generateContent(req, res, next) {
       scheduledTime: schedule ? scheduledTime || null : null,
       model: 'gpt-4o-mini',
       imageUrl,
-      tokensUsed: null
+      tokensUsed: null,
+      aiEnhanced: generated.aiEnhanced
     };
 
     return res.json({ success: true, content, meta });
@@ -49,6 +61,7 @@ export async function generateContent(req, res, next) {
 export async function enrichContent(req, res, next) {
   try {
     const { content } = req.body || {};
+    const userId = req.user ? req.user.id : null;
 
     const trimmed = (content || '').trim();
 
@@ -60,7 +73,16 @@ export async function enrichContent(req, res, next) {
       return res.status(400).json({ success: false, message: 'Content is too long' });
     }
 
-    const enriched = await libEnrich(trimmed);
+    // Fetch user to get API key
+    let userApiKey = null;
+    if (userId) {
+      const user = await User.findById(userId);
+      if (user && user.apiKeys && user.apiKeys.openai) {
+        userApiKey = user.apiKeys.openai;
+      }
+    }
+
+    const enriched = await libEnrich(trimmed, userApiKey);
 
     const meta = {
       operation: 'enrich',

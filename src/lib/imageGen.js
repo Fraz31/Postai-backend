@@ -6,14 +6,20 @@ const openai = env.OPENAI_API_KEY
     ? new OpenAI({ apiKey: env.OPENAI_API_KEY })
     : null;
 
-export async function generateImage(prompt) {
-    if (!openai) {
+export async function generateImage(prompt, apiKey = null) {
+    let client = openai;
+
+    if (apiKey) {
+        client = new OpenAI({ apiKey });
+    }
+
+    if (!client) {
         logger.warn('OpenAI API Key missing for image generation');
         return null;
     }
 
     try {
-        const response = await openai.images.generate({
+        const response = await client.images.generate({
             model: "dall-e-3",
             prompt: prompt,
             n: 1,

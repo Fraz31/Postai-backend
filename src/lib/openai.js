@@ -5,15 +5,21 @@ export const openai = env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: env.OPENAI_API_KEY })
   : null;
 
-export async function generateContent(prompt, contentType = 'post') {
-  if (!openai) {
+export async function generateContent(prompt, contentType = 'post', apiKey = null) {
+  let client = openai;
+
+  if (apiKey) {
+    client = new OpenAI({ apiKey });
+  }
+
+  if (!client) {
     return generatePlaceholderContent(prompt, contentType);
   }
 
   try {
     const systemPrompt = getSystemPrompt(contentType);
 
-    const response = await openai.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
@@ -38,13 +44,19 @@ export async function generateContent(prompt, contentType = 'post') {
   }
 }
 
-export async function enrichContent(content) {
-  if (!openai) {
+export async function enrichContent(content, apiKey = null) {
+  let client = openai;
+
+  if (apiKey) {
+    client = new OpenAI({ apiKey });
+  }
+
+  if (!client) {
     return generatePlaceholderEnrichment(content);
   }
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {

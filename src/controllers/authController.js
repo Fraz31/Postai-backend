@@ -126,17 +126,21 @@ export async function updateConnection(req, res, next) {
       return res.status(400).json({ success: false, message: 'Platform and token are required' });
     }
 
-    const validPlatforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok'];
+    const validPlatforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'openai'];
     if (!validPlatforms.includes(platform)) {
       return res.status(400).json({ success: false, message: 'Invalid platform' });
     }
 
     const update = {};
-    update[`socialAccounts.${platform}`] = {
-      connected: true,
-      accessToken: token,
-      username: 'Connected User' // Placeholder until we fetch real profile
-    };
+    if (platform === 'openai') {
+      update['apiKeys.openai'] = token;
+    } else {
+      update[`socialAccounts.${platform}`] = {
+        connected: true,
+        accessToken: token,
+        username: 'Connected User' // Placeholder until we fetch real profile
+      };
+    }
 
     const user = await User.findByIdAndUpdate(userId, { $set: update }, { new: true });
 
